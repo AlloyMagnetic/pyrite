@@ -1,0 +1,4 @@
+name: Pyrite Spam Mitigation
+type: module
+description: A suite of anti-spam measures
+core: 8.x

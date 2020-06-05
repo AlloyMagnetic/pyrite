@@ -1,0 +1,160 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+
+function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterface $form_state) {
+  $webform = $form_state->getFormObject()->getEntity();
+  $elements = $webform->getElementsInitialized();
+  $options = [];
+  foreach ($elements as $element) {
+    $options[rawurlencode($element['#webform_key'])] = $element['#title'];
+  }
+
+  $form['third_party_settings']['pyrite'] = [
+    '#type' => 'details',
+    '#title' => t('Pyrite'),
+    '#open' => TRUE,
+    '#description' => t('Mitigate SPAM webform submissions using various methods.'),
+  ];
+
+  $form['third_party_settings']['pyrite']['rules'] = [
+    '#type' => 'checkboxes',
+    '#title' => 'Rejection criteria',
+    '#options' => [
+      'name_match' => 'Name fields match',
+      'russian_email' => 'Email domain ends in .ru',
+      'prohibited_words' => 'Text contain prohibited words',
+      'prohibited_urls' => 'Text contains URLs'
+    ],
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules')
+  ];
+
+
+  $form['third_party_settings']['pyrite']['name_fields'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Name fields'),
+    '#options' => $options,
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'name_fields'),
+    '#description' => t('Select the fields that indicate first and last name.'),
+  );
+
+  $form['third_party_settings']['pyrite']['text_fields'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Text fields'),
+    '#options' => $options,
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'text_fields'),
+    '#description' => t('Select the fields to be checked for prohibited content.'),
+  );
+
+
+
+}
+
+function pyrite_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  
+  if (!$form_state->getFormObject() instanceof \Drupal\Core\Entity\EntityFormInterface) {
+    return;
+  }
+
+  if ($form_state->getFormObject()->getEntity()->getEntityTypeId() != 'webform_submission') {
+    return;
+  }
+
+  $webform = $form_state->getFormObject()->getEntity()->getWebform();
+  if (!$webform) {
+    return;
+  }
+
+  $form['#validate'][] = 'pyrite_webform_validation';
+
+}
+
+function pyrite_webform_validation($form, &$form_state) {
+  $debug = false;
+
+  $error = 'There was a problem with your submission.';
+
+  $webform = $form_state->getFormObject()->getEntity()->getWebform();
+
+  $rules = $webform->getThirdPartySetting('pyrite', 'rules');
+
+  if ($rules['name_match']) {
+    $fields = $webform->getThirdPartySetting('pyrite', 'name_fields');
+    $match_value = false;
+    foreach ($fields as $key => $field) {
+      if ($field) {
+        $submitted_value = $form_state->getValue($field);
+        if ($match_value) {
+          if ($submitted_value == $match_value) {
+            $error .= $debug ? " Name match violation." : "";
+            $form_state->setErrorByName('form', t($error));
+            \Drupal::logger('pyrite')->notice("Name match violation: @value / @value2", ['@value' => $submitted_value, '@value2' => $match_value]);
+            return;
+          }
+        }
+        else {
+          $match_value = $submitted_value;
+        }
+      }
+    }
+  }
+
+  if ($rules['prohibited_words']) {
+    $fields = $webform->getThirdPartySetting('pyrite', 'text_fields');
+    foreach ($fields as $key => $field) {
+      if ($field) {
+        $submitted_value = $form_state->getValue($field);
+        foreach (pyrite_prohibited_words() as $word) {
+          if (stripos($submitted_value, " $word") !== false) {
+            $error .= $debug ? " Prohibited words violation." : "";
+            $form_state->setErrorByName('form', t($error));
+            \Drupal::logger('pyrite')->notice("Prohibited words violation: @value", ['@value' => $submitted_value]);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  if ($rules['prohibited_urls']) {
+    $fields = $webform->getThirdPartySetting('pyrite', 'text_fields');
+    foreach ($fields as $key => $field) {
+      if ($field) {
+        $submitted_value = $form_state->getValue($field);
+        if (preg_match_all('@((https?://)?([-\\w]+\\.[-\\w\\.]+)+\\w(:\\d+)?(/([-\\w/_\\.]*(\\?\\S+)?)?)*)@', $submitted_value)) {
+          $error .= $debug ? " Prohibited URLs violation." : "";
+          $form_state->setErrorByName('form', t($error));
+          \Drupal::logger('pyrite')->notice("Prohibited URLs violation: @value", ['@value' => $submitted_value]);
+          return;
+        }
+      }
+    }
+  }
+  
+  if ($rules['russian_email']) {
+    $elements = $webform->getElementsInitialized();
+    foreach ($elements as $element) {
+      if ($element['#type'] == 'email') {
+        $submitted_value = $form_state->getValue($element['#webform_key']);
+        $submitted_value = trim($submitted_value);
+        $check_value = substr($submitted_value, -3);
+        if ($check_value == '.ru') {
+          $error .= $debug ? " Prohibited email violation." : "";
+          $form_state->setErrorByName('form', t($error));
+          \Drupal::logger('pyrite')->notice("Email domain violation: @value", ['@value' => $submitted_value]);
+          return;
+        }
+      }
+    }
+  }
+
+  if ($debug) {
+    $form_state->setErrorByName('form', t('No violations found.'));
+  }
+}
+
+function pyrite_prohibited_words() {
+  return [
+    'arse', 'ballsack', 'bastard', 'bastards', 'bitch', 'bitches', 'bitcoin', 'bitcoins', 'blockchain', 'blockchains', 'blowjob', 'blowjobs', 'blow job', 'blow jobs', 'boner', 'boners', 'boob', 'boobs', 'buttplug', 'clitoris', 'clit', 'cock', 'coon', 'cunt', 'dick', 'dildo', 'dyke', 'fellate', 'fellatio', 'fuck', 'Goddamn', 'God damn', 'hentai', 'jerk', 'jizz', 'labia', 'lesbian', 'muff', 'nigger', 'nigga', 'penis', 'piss', 'poop', 'porn', 'pube', 'pussy', 'queer', 'scrotum', 'shit', 'slut', 'smegma', 'spunk', 'tit', 'tits', 'tosser', 'turd', 'twat', 'vagina', 'wank', 'whore', 'online dating', 'internet dating', 'guest post', 'teens', 'teenagers', 'testosterone', 'payday loan', 'payday loans', 'personal loan', 'personal loans', 'seo metrics', 'search engine', 'search engines', 'anime', 'viagra', 'cialis', 'drugs'
+  ];
+}

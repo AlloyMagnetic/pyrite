@@ -1,0 +1,13 @@
+{
+  "name": "alloy/pyrite",
+  "type": "drupal-module",
+  "description": "Configurable spam prevention",
+  "keywords": ["Drupal"],
+  "license": "proprietary",
+  "homepage": "https://code.kilpho.st/alloy/pyrite",
+  "minimum-stability": "dev",
+  "support": {
+  },
+  "require": { }
+}
+
