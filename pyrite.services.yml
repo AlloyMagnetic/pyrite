@@ -1,0 +1,7 @@
+services:
+  logger.channel.pyrite:
+    parent: logger.channel_base
+    arguments: ['pyrite']
+  pyrite.rules:
+    class: Drupal\pyrite\PyriteRules
+    arguments: []
