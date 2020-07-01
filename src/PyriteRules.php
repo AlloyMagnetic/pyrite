@@ -21,9 +21,9 @@ class PyriteRules {
         if ($value == $match_value) {
           return [$value, $match_value];
         }
-        else {
-          $match_value = $value;
-        }
+      }
+      else {
+        $match_value = $value;
       }
     }
     return false;
