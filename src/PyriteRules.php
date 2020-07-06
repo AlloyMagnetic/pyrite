@@ -79,6 +79,9 @@ class PyriteRules {
       if (strpos($value, 'bit.ly')) {
         return $value;
       }
+      if (strpos($value, 'tinyurl.com')) {
+        return $value;
+      }
     }
     return false;
   }
@@ -90,6 +93,15 @@ class PyriteRules {
       }
     }
     return false;
+  }
+
+  public static function cyrillic($values) {
+    foreach ($values as $value) {
+      $match = preg_match('/[А-Яа-яЁё]/u', $value, $matches);
+      if ($match) {
+        return $matches[0];
+      }
+    }
   }
 }
 

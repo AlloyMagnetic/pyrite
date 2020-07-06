@@ -6,7 +6,8 @@ use Drupal\Core\Form\FormStateInterface;
 
 function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterface $form_state) {
   $webform = $form_state->getFormObject()->getEntity();
-  $elements = $webform->getElementsInitialized();
+  $elements = $webform->getElementsInitializedAndFlattened();
+
   $options = [];
   foreach ($elements as $element) {
     $options[rawurlencode($element['#webform_key'])] = $element['#title'];
@@ -29,7 +30,8 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
       'prohibited_words' => 'Text contain prohibited words',
       'local_domain' => 'Text contains the site\'s URL',
       'multiple_urls' => 'Text contains multiple URLs',
-      'bitly' => 'Text contains any bit.ly URL',
+      'bitly' => 'Text contains any bit.ly or tinyurl.com URL',
+      'cyrillic' => 'Text contains Cyrillic characters',
     ],
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules')
   ];
@@ -196,6 +198,16 @@ function pyrite_reject_local_domain(Webform $webform, FormStateInterface $form_s
     $error .= $debug ? " Local domain violation." : "";
     $form_state->setErrorByName('form', t($error));
     \Drupal::logger('pyrite')->notice("Local domain violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_cyrillic(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::cyrillic(pyrite_text_field_values($webform, $form_state))) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Cyrillic violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Cyrillic violation: @value", ['@value' => $offense]);
     return true;
   }
 }
