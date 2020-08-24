@@ -25,6 +25,7 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#title' => 'Rejection criteria',
     '#options' => [
       'name_match' => 'Name fields match',
+      'invalid_capitals' => 'Invalid capital letters',
       'russian_email' => 'Email domain ends in .ru',
       'phone_zero' => 'Phone number starts with 0',
       'prohibited_words' => 'Text contain prohibited words',
@@ -208,6 +209,16 @@ function pyrite_reject_cyrillic(Webform $webform, FormStateInterface $form_state
     $error .= $debug ? " Cyrillic violation." : "";
     $form_state->setErrorByName('form', t($error));
     \Drupal::logger('pyrite')->notice("Cyrillic violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_invalid_capitals(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::invalidCapitals(pyrite_name_field_values($webform, $form_state))) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Invalid capitals violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Invalid capitals violation: @value", ['@value' => $offense]);
     return true;
   }
 }

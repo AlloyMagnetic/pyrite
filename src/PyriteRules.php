@@ -63,7 +63,7 @@ class PyriteRules {
     }
     return false;
   }
-  
+
   public static function multipleUrls($values) {
     foreach ($values as $value) {
       $match = preg_match_all('@((https?://)?([-\\w]+\\.[-\\w\\.]+)+\\w(:\\d+)?(/([-\\w/_\\.]*(\\?\\S+)?)?)*)@', $value);
@@ -103,5 +103,17 @@ class PyriteRules {
       }
     }
   }
+
+  public static function invalidCapitals($values) {
+    foreach ($values as $value) {
+      $value = trim($value);
+      $match = preg_match_all('/[a-z][A-Z]{2}/m', $value);
+      if ($match > 1) {
+        return $value;
+      }
+    }
+    return false;
+  }
+
 }
 
