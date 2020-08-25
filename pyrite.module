@@ -24,15 +24,15 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#type' => 'checkboxes',
     '#title' => 'Rejection criteria',
     '#options' => [
-      'name_match' => 'Name fields match',
-      'invalid_capitals' => 'Invalid capital letters',
-      'russian_email' => 'Email domain ends in .ru',
-      'phone_zero' => 'Phone number starts with 0',
-      'prohibited_words' => 'Text contain prohibited words',
-      'local_domain' => 'Text contains the site\'s URL',
-      'multiple_urls' => 'Text contains multiple URLs',
-      'bitly' => 'Text contains any bit.ly or tinyurl.com URL',
-      'cyrillic' => 'Text contains Cyrillic characters',
+      'name_match' => 'Name: value repeated',
+      'invalid_capitals' => 'Name: invalid capital letters',
+      'russian_email' => 'Email: domain ends in .ru',
+      'phone_zero' => 'Phone: starts with 0',
+      'prohibited_words' => 'Text: contains prohibited words',
+      'local_domain' => 'Text: contains the site\'s URL',
+      'multiple_urls' => 'Text: contains multiple URLs',
+      'bitly' => 'Text: contains any bit.ly or tinyurl.com URL',
+      'cyrillic' => 'Text: contains Cyrillic characters',
     ],
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules')
   ];
@@ -42,7 +42,7 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#title' => t('Name fields'),
     '#options' => $options,
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'name_fields'),
-    '#description' => t('Select the fields that indicate first and last name.'),
+    '#description' => t('Select the fields that should be checked for name criteria.'),
   );
 
   $form['third_party_settings']['pyrite']['text_fields'] = array(
@@ -50,7 +50,7 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#title' => t('Text fields'),
     '#options' => $options,
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'text_fields'),
-    '#description' => t('Select the fields to be checked for prohibited content.'),
+    '#description' => t('Select the fields to be checked for text criteria.'),
   );
 }
 
