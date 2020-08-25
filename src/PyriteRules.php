@@ -108,7 +108,7 @@ class PyriteRules {
     foreach ($values as $value) {
       $value = trim($value);
       $match = preg_match_all('/[a-z][A-Z]{2}/m', $value);
-      if ($match > 1) {
+      if ($match >= 1) {
         return $value;
       }
     }
