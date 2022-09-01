@@ -34,14 +34,14 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
       'bitly' => 'Text: contains any bit.ly or tinyurl.com URL',
       'cyrillic' => 'Text: contains Cyrillic characters',
     ],
-    '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules')
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules') ?: [],
   ];
 
   $form['third_party_settings']['pyrite']['name_fields'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Name fields'),
     '#options' => $options,
-    '#default_value' => $webform->getThirdPartySetting('pyrite', 'name_fields'),
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'name_fields') ?: [],
     '#description' => t('Select the fields that should be checked for name criteria.'),
   );
 
@@ -49,7 +49,7 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#type' => 'checkboxes',
     '#title' => t('Text fields'),
     '#options' => $options,
-    '#default_value' => $webform->getThirdPartySetting('pyrite', 'text_fields'),
+    '#default_value' => $webform->getThirdPartySetting('pyrite', 'text_fields') ?: [],
     '#description' => t('Select the fields to be checked for text criteria.'),
   );
 }
