@@ -80,9 +80,11 @@ function pyrite_webform_validation($form, &$form_state) {
 
   $rules = $webform->getThirdPartySetting('pyrite', 'rules');
 
-  foreach($rules as $rule => $value) {
-    if ($value && call_user_func('pyrite_reject_' . $value, $webform, $form_state, $debug)) {
-      return false;
+  if (is_array($rules)) {
+    foreach ($rules as $rule => $value) {
+      if ($value && call_user_func('pyrite_reject_' . $value, $webform, $form_state, $debug)) {
+        return false;
+      }
     }
   }
 
