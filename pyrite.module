@@ -98,7 +98,10 @@ function pyrite_name_field_values(Webform $webform, FormStateInterface $form_sta
   $fields = $webform->getThirdPartySetting('pyrite', 'name_fields');
   foreach ($fields as $key => $field) {
     if ($field) {
-      $values[] = $form_state->getValue($field);
+      $value = $form_state->getValue($field);
+      if ($value) {
+        $values[] = $value;
+      }
     }
   }
   return $values;
@@ -129,7 +132,10 @@ function pyrite_text_field_values(Webform $webform, FormStateInterface $form_sta
   $fields = $webform->getThirdPartySetting('pyrite', 'text_fields');
   foreach ($fields as $key => $field) {
     if ($field) {
-      $values[] = $form_state->getValue($field);
+      $value = $form_state->getValue($field);
+      if ($value) {
+        $values[] = $value;
+      }
     }
   }
   return $values;
