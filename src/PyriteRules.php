@@ -104,7 +104,7 @@ class PyriteRules {
     }
   }
 
-  public static function chinese($value) {
+  public static function chinese($values) {
     foreach ($values as $value) {
       $match = preg_match('/\p{Han}+/u', $value, $matches);
     }
