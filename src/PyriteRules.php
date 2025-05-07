@@ -104,6 +104,15 @@ class PyriteRules {
     }
   }
 
+  public static function chinese($values) {
+    foreach ($values as $value) {
+      $match = preg_match('/\p{Han}+/u', $value, $matches);
+    }
+    if ($match) {
+      return $matches[0];
+    }
+  }
+
   public static function invalidCapitals($values) {
     foreach ($values as $value) {
       $value = trim($value);

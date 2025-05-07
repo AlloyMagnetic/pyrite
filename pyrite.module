@@ -33,6 +33,7 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
       'multiple_urls' => 'Text: contains multiple URLs',
       'bitly' => 'Text: contains any bit.ly or tinyurl.com URL',
       'cyrillic' => 'Text: contains Cyrillic characters',
+      'chinese' => 'Text: contains Chinese characters',
     ],
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules') ?: [],
   ];
@@ -98,7 +99,10 @@ function pyrite_name_field_values(Webform $webform, FormStateInterface $form_sta
   $fields = $webform->getThirdPartySetting('pyrite', 'name_fields');
   foreach ($fields as $key => $field) {
     if ($field) {
-      $values[] = $form_state->getValue($field);
+      $value = $form_state->getValue($field);
+      if ($value) {
+        $values[] = $value;
+      }
     }
   }
   return $values;
@@ -129,7 +133,10 @@ function pyrite_text_field_values(Webform $webform, FormStateInterface $form_sta
   $fields = $webform->getThirdPartySetting('pyrite', 'text_fields');
   foreach ($fields as $key => $field) {
     if ($field) {
-      $values[] = $form_state->getValue($field);
+      $value = $form_state->getValue($field);
+      if ($value) {
+        $values[] = $value;
+      }
     }
   }
   return $values;
@@ -211,6 +218,16 @@ function pyrite_reject_cyrillic(Webform $webform, FormStateInterface $form_state
     $error .= $debug ? " Cyrillic violation." : "";
     $form_state->setErrorByName('form', t($error));
     \Drupal::logger('pyrite')->notice("Cyrillic violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_chinese(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::chinese(pyrite_text_field_values($webform, $form_state))) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Chinese violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Chinese violation: @value", ['@value' => $offense]);
     return true;
   }
 }
