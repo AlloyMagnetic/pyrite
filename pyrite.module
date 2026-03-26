@@ -26,14 +26,17 @@ function pyrite_webform_third_party_settings_form_alter(&$form, FormStateInterfa
     '#options' => [
       'name_match' => 'Name: value repeated',
       'invalid_capitals' => 'Name: invalid capital letters',
+      'name_invalid_characters' => 'Name: contains invalid characters',
       'russian_email' => 'Email: domain ends in .ru',
       'phone_zero' => 'Phone: starts with 0',
+      'phone_length' => 'Phone: must be 10 digits (US)',
       'prohibited_words' => 'Text: contains prohibited words',
       'local_domain' => 'Text: contains the site\'s URL',
+      'any_domain' => 'Text: contains any URL',
       'multiple_urls' => 'Text: contains multiple URLs',
       'bitly' => 'Text: contains any bit.ly or tinyurl.com URL',
       'cyrillic' => 'Text: contains Cyrillic characters',
-      'chinese' => 'Text: contains Chinese characters',
+      'duplicate_ip_hour' => 'Duplicate IP: same IP submitted this form in the past hour',
     ],
     '#default_value' => $webform->getThirdPartySetting('pyrite', 'rules') ?: [],
   ];
@@ -182,8 +185,18 @@ function pyrite_reject_phone_zero(Webform $webform, FormStateInterface $form_sta
   }
 }
 
+function pyrite_reject_phone_length(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::phoneLength(pyrite_phone_field_values($webform, $form_state))) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Phone length violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Phone length violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
 function pyrite_reject_multiple_urls(Webform $webform, FormStateInterface $form_state, Bool $debug) {
-  if ($offense = PyriteRules::multipleUrls(pyrite_text_field_values($webform, $form_state))) {
+  if ($offense = PyriteRules::multipleUrls(pyrite_text_field_values($webform, $form_state), 1)) {
     $error = 'There was a problem with your submission.';
     $error .= $debug ? " Multiple URLs violation." : "";
     $form_state->setErrorByName('form', t($error));
@@ -222,22 +235,45 @@ function pyrite_reject_cyrillic(Webform $webform, FormStateInterface $form_state
   }
 }
 
-function pyrite_reject_chinese(Webform $webform, FormStateInterface $form_state, Bool $debug) {
-  if ($offense = PyriteRules::chinese(pyrite_text_field_values($webform, $form_state))) {
-    $error = 'There was a problem with your submission.';
-    $error .= $debug ? " Chinese violation." : "";
-    $form_state->setErrorByName('form', t($error));
-    \Drupal::logger('pyrite')->notice("Chinese violation: @value", ['@value' => $offense]);
-    return true;
-  }
-}
-
 function pyrite_reject_invalid_capitals(Webform $webform, FormStateInterface $form_state, Bool $debug) {
   if ($offense = PyriteRules::invalidCapitals(pyrite_name_field_values($webform, $form_state))) {
     $error = 'There was a problem with your submission.';
     $error .= $debug ? " Invalid capitals violation." : "";
     $form_state->setErrorByName('form', t($error));
     \Drupal::logger('pyrite')->notice("Invalid capitals violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_name_invalid_characters(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::nameInvalidCharacters(pyrite_name_field_values($webform, $form_state))) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Name invalid characters violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Name invalid characters violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_any_domain(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::multipleUrls(pyrite_text_field_values($webform, $form_state), 0)) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Any domain violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice("Any domain violation: @value", ['@value' => $offense]);
+    return true;
+  }
+}
+
+function pyrite_reject_duplicate_ip_hour(Webform $webform, FormStateInterface $form_state, Bool $debug) {
+  if ($offense = PyriteRules::duplicateIpHour($webform, $form_state)) {
+    $error = 'There was a problem with your submission.';
+    $error .= $debug ? " Duplicate IP (past hour) violation." : "";
+    $form_state->setErrorByName('form', t($error));
+    \Drupal::logger('pyrite')->notice('Duplicate IP (past hour) violation: @ip webform @webform_id', [
+      '@ip' => $offense,
+      '@webform_id' => $webform->id(),
+    ]);
     return true;
   }
 }
