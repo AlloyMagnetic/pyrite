@@ -113,7 +113,7 @@ function pyrite_name_field_values(Webform $webform, FormStateInterface $form_sta
 
 function pyrite_phone_field_values(Webform $webform, FormStateInterface $form_state) {
   $values = [];
-  foreach ($webform->getElementsInitialized() as $element) {
+  foreach ($webform->getElementsInitializedAndFlattened() as $element) {
     if ($element['#type'] == 'tel') {
       $values[] = $form_state->getValue($element['#webform_key']);
     }
@@ -123,7 +123,7 @@ function pyrite_phone_field_values(Webform $webform, FormStateInterface $form_st
 
 function pyrite_email_field_values(Webform $webform, FormStateInterface $form_state) {
   $values = [];
-  foreach ($webform->getElementsInitialized() as $element) {
+  foreach ($webform->getElementsInitializedAndFlattened() as $element) {
     if ($element['#type'] == 'email') {
       $values[] = $form_state->getValue($element['#webform_key']);
     }
